@@ -1,0 +1,61 @@
+configs:
+  special.users:
+    file: configs/special.usersss
+    name: configs/special.users.3368edd8e18f02d407bbfff5970ac8b6
+networks:
+  traefik_public:
+    external: true
+secrets:
+  book.users:
+    external: true
+  web.users:
+    file: secrets/web.users
+    name: secrets/web.users.919d8d6c8165206c58d424144806b073
+services:
+  reverse-proxy:
+    command:
+    - --providers.docker.swarmMode=true
+    - --providers.docker.exposedbydefault=false
+    - --providers.docker.endpoint=unix:///var/run/docker.sock
+    - --providers.docker.network=traefik_public
+    - --api
+    - --entrypoints.web.address=:80
+    - --entrypoints.websecure.address=:443
+    - --certificatesresolvers.letsencryptresolver.acme.httpchallenge=true
+    - --certificatesresolvers.letsencryptresolver.acme.tlschallenge=true
+    - --certificatesresolvers.letsencryptresolver.acme.email=jan.vlcinsky@ce-traffic.com
+    - --certificatesresolvers.letsencryptresolver.acme.storage=/letsencrypt/acme.json
+    deploy:
+      labels:
+      - traefik.enable=true
+      - traefik.http.routers.traefik.service=api@internal
+      - traefik.http.services.traefik.loadbalancer.server.port=888
+      - traefik.http.routers.traefik.rule=Host(`traefik.croads.ce-traffic.com`)
+      - traefik.http.routers.traefik.entrypoints=websecure
+      - traefik.http.routers.traefik.tls.certresolver=letsencryptresolver
+      - traefik.http.routers.traefik.middlewares=web_auth
+      - traefik.http.middlewares.web_auth.basicauth.realm=C-Roads
+      - traefik.http.middlewares.web_auth.basicauth.usersfile=/run/secrets/web.users
+      - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
+      - traefik.http.routers.redirs.rule=hostregexp(`{host:.+}`)
+      - traefik.http.routers.redirs.entrypoints=web
+      - traefik.http.routers.redirs.middlewares=redirect-to-https
+      placement:
+        constraints:
+        - node.role==manager
+      restart_policy:
+        delay: 5s
+    image: traefik:v2.1.1
+    networks:
+    - traefik_public
+    ports:
+    - 80:80
+    - 443:443
+    secrets:
+    - web.users
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+    - traefik-certificates:/letsencrypt
+version: '3.7'
+volumes:
+  traefik-certificates: null

@@ -1,0 +1,59 @@
+networks:
+  traefik_public:
+    external: true
+    name: traefik_public
+secrets:
+  web.users:
+    file: /home/javl/devel/croads/gitlab/deployment/kvados-jsonnet/croads_dataview/environments/croads/traefik/_deploy/croads_traefik/secrets/web.users
+    name: web.users.26dfe298f9b374477165e67f7752ba3c
+services:
+  reverse-proxy:
+    command:
+    - --providers.docker.swarmMode=true
+    - --providers.docker.exposedbydefault=false
+    - --providers.docker.endpoint=unix:///var/run/docker.sock
+    - --providers.docker.network=traefik_public
+    - --api
+    - --entrypoints.web.address=:80
+    - --entrypoints.websecure.address=:443
+    - --certificatesresolvers.letsencryptresolver.acme.httpchallenge=true
+    - --certificatesresolvers.letsencryptresolver.acme.tlschallenge=true
+    - --certificatesresolvers.letsencryptresolver.acme.email=jan.vlcinsky@ce-traffic.com
+    - --certificatesresolvers.letsencryptresolver.acme.storage=/letsencrypt/acme.json
+    deploy:
+      labels:
+      - traefik.enable=true
+      - traefik.http.routers.traefik.service=api@internal
+      - traefik.http.services.traefik.loadbalancer.server.port=888
+      - traefik.http.routers.traefik.rule=Host(`traefik.croads.ce-traffic.com`)
+      - traefik.http.routers.traefik.entrypoints=websecure
+      - traefik.http.routers.traefik.tls.certresolver=letsencryptresolver
+      - traefik.http.routers.traefik.middlewares=web_auth
+      - traefik.http.middlewares.web_auth.basicauth.realm=C-Roads
+      - traefik.http.middlewares.web_auth.basicauth.usersfile=/run/secrets/web.users
+      - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
+      - traefik.http.routers.redirs.rule=hostregexp(`{host:.+}`)
+      - traefik.http.routers.redirs.entrypoints=web
+      - traefik.http.routers.redirs.middlewares=redirect-to-https
+      placement:
+        constraints:
+        - node.role==manager
+      restart_policy:
+        delay: 5s
+    image: traefik:v2.1.1
+    networks:
+      traefik_public: null
+    ports:
+    - published: 80
+      target: 80
+    - published: 443
+      target: 443
+    secrets:
+    - source: web.users
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+    - traefik-certificates:/letsencrypt:rw
+version: '3.7'
+volumes:
+  traefik-certificates: {}
+

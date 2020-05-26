@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "sanky"
+version = "0.1.0"
+description = ""
+authors = ["Jan Vlcinsky <jan.vlcinsky@tamtamresearch.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+pyyaml = "^5.3.1"
+invoke = "^1.4.1"
+structlog = "^20.1.0"
+colorama = "^0.4.3"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+
+[tool.poetry.scripts]
+sk = "sanky.cli:program.run"
+sanky = "sanky.cli:program.run"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
