@@ -2,6 +2,9 @@ import structlog
 from invoke import Collection, Program
 
 from . import tasks
+from . import context
+from . import stack
+from . import mustack
 # structlog.processors.KeyValueRenderer
 
 structlog.configure(
@@ -19,8 +22,12 @@ structlog.configure(
     cache_logger_on_first_use=False
 )
 
+ns = Collection()
+for module in [tasks, context, stack, mustack]:
+    ns.add_collection(Collection.from_module(module))
+
 program = Program(
     version="0.1.0",
     binary_names=["sk", "sanky"],
-    namespace=Collection.from_module(tasks),
+    namespace=ns,
 )
