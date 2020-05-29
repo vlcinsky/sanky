@@ -16,9 +16,9 @@ def deploy(c):
     for dock_comp in (ec.env_dir / "_deploy").rglob("docker-compose.yml"):
         stack_dir = dock_comp.parent
         stack_name = stack_dir.name
-        with c.cd(stack_dir):
-            cmd = f"docker stack deploy -c docker-compose.yml {stack_name}"
-            print(f"cd {stack_dir} && {cmd}")
+        with c.cd(str(stack_dir)):
+            cmd = f"docker stack deploy -c docker-compose.yml --with-registry-auth {stack_name}"
+            c.run(cmd)
 
 
 @task
@@ -34,4 +34,4 @@ def rm(c):
         stack_name = stack_dir.name
         # no need to be in stack directory for rm
         cmd = f"docker stack rm {stack_name}"
-        print(f"{cmd}")
+        c.run(cmd)
