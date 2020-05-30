@@ -22,7 +22,7 @@ Motivation
 
 -  the conclusion is simple: **There must be a better way!!!**
 
-.. contents: Table of Contents
+.. contents:: Table of Contents
 
 Quick Demo
 ==========
