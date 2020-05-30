@@ -1,6 +1,7 @@
 ==============================================================
 Sanky - Flexible, reusable and concise configuration for Swarm
 ==============================================================
+WARNING: Project is currently in VERY EXPERIMENTAL state.
 
 Motivation
 ==========
